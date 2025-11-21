@@ -1,13 +1,23 @@
-FROM python:3.12-slim
+# 基础镜像
+FROM python:3.11-slim
 
+# 设置容器工作目录
 WORKDIR /app
 
-COPY requirements.txt .
+# 安装系统依赖（gcc、Postgres client）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir -r requirements.txt
+# 安装 Poetry 并安装依赖
+COPY pyproject.toml poetry.lock* ./
+RUN pip install --no-cache-dir poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-interaction --no-ansi
 
-COPY . .
+# 复制应用代码
+COPY app ./app
 
-EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

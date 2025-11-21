@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: myorg/fastapi-app:latest
     container_name: fastapi_app
     env_file:
       - .env
@@ -17,10 +16,18 @@ services:
         condition: service_healthy
     networks:
       - backend
-    expose:
-      - "8000"           # 只在内部网络暴露给 nginx
     volumes:
-      - ./logs:/var/log/fastapi:rw   # 可选：容器日志 / 持久化
+      - ./app:/app/app          # 本地代码挂载到容器
+      - ./logs:/var/log/fastapi
+    ports:
+      - "8000:8000"
+    # 启动命令，可通过环境变量控制模式
+    command: >
+      sh -c "if [ \"$ENVIRONMENT\" = 'production' ]; then
+               gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w ${GUNICORN_WORKERS:-4} --bind 0.0.0.0:8000 --timeout ${GUNICORN_TIMEOUT:-120};
+             else
+               uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload;
+             fi"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 15s
@@ -61,13 +68,13 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"   # 如果你配置 TLS（推荐），映射 443
+      - "443:443"
     depends_on:
       app:
         condition: service_started
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./static:/app/static:ro    # 如果有静态文件
+      - ./static:/app/static:ro
     networks:
       - backend
       - frontend
