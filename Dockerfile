@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # 安装 Poetry 并安装依赖
 # COPY pyproject.toml poetry.lock* ./
-RUN pip install --no-cache-dir poetry \
-    && poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
+# RUN pip install --no-cache-dir poetry \
+#     && poetry config virtualenvs.create false \
+#     && poetry install --no-dev --no-interaction --no-ansi
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

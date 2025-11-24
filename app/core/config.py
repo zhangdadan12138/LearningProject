@@ -1,4 +1,6 @@
-from pydantic import BaseSettings
+# from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
+# from pydantic import BaseSettings, PostgresDsn, field_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "FastAPI Robust Project"
